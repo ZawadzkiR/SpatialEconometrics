@@ -1,25 +1,4 @@
 
-<h1>Ekonometria przestrzenna</h1>
-<br>
-
-<h2>Predykcja cen mieszkań w Pekinie za pomocą Lasu Losowego (Random Forest), Geograficznie Ważonej Regresji (GWR) oraz Geograficznie Ważnonego Random Forest (GWRF)</h2>
-<br>
-
-<h3>Robert Zawadzki</h3>
-<h4>25.01.2023</h4>
-
-
-<br>
-<br>
-<br>
-
-<h1>Wstęp</h1>
-
-Celem niniejszej pracy jest przedstawioenie modeli przeznaczonych do predycji regresyjnych dla danych geolokalizacyjnych oraz zbadanie użyteczności uwzględniania czynników przestrzennych w modelach predykcyjnych. Do porównania modeli Random Forest, Random Forest ze współczynnikami wyestymowanymi z modelu GWR oraz Geograficznie Ważonego Random Forest, użyto cen mieszkań w Pekinie w latach 2015-2017. 
-
-
-
-
 ```{r}
 #instalacja bibliotek
 
@@ -74,71 +53,6 @@ library(GGally)
 options(warn=-1)
 options(repr.plot.width=15, repr.plot.height=10)
 ```
-
-<h1>Zbiór danych</h1>
-
-<p>
-
-Do przeprowadzenia badania posłużono się zbiorem danych <a href = 'https://www.kaggle.com/datasets/ruiqurm/lianjia' >"Housing price in Beijing" </a>. Dane pochodzą ze strony kaggle oraz obejmują ceny mieszkań w latach 2011-2018. Zbiór zawiera 26 zmiennych oraz 318851 obserwacji. Do modelowania wyselekcjonowano następujące zmienne ze zbioru:
-<br>
-<ul>
-<li><b>price</b> - cena mieszkania (zmienna objaśniana)</li>
-<li><b>Lng</b> i <b>Lat</b> - długość i szeregość geograficzna</li>
-<li><b>square</b> - powierzchnia mieszkania (w m2)</li>
-<li><b>livingRoom</b> - ilość sypialni (błędna nazwa w dostarczonych danych)</li>
-<li><b>kitchen</b> - ilość kuchni w mieszkaniu</li>
-<li><b>drawingRoom</b> - ilość salonów</li>
-<li><b>bathroom</b> - ilość łazienek</li>
-<li><b>floor</b> - piętro</li>
-<li><b>buildingType</b> - typ budynku
-<ul>
-<li>Wieża</li>
-<li>Bungalow</li>
-<li>Połączenie płyty i wieży</li>
-<li>Płyta</li>
-</ul>
-</li>
-<li><b>renovationCondition</b> - Stan renowacji
-<ul>
-<li>Inne</li>
-<li>Szorstki</li>
-<li>Prosty</li>
-<li>Twardy</li>
-</ul>
-</li>
-<li><b>buildingStructure</b> - Budowa
-<ul>
-<li>Nieznana</li>
-<li>Mieszana</li>
-<li>Ceglano-drewniana</li>
-<li>Ceglano-betonowa</li>
-<li>Stalowa</li>
-<li>Stalowo-betonowa</li>
-</ul>
-</li>
-<li><b>ladderRatio</b> - proporcja między liczbą mieszkańców na tym samym piętrze a liczbą wind lub drabin. Opisuje, ile drabin ma przeciętnie mieszkaniec.</li>
-<li><b>elevator</b> - Winda w mieszkaniu
-<ul>
-<li>Nie</li>
-<li>Tak</li>
-</ul>
-</li>
-<li><b>year</b> - Zmienna powstała różnicy zmiennych <b>tradeTime</b> oraz <b>constructionTime</b>. Jest to wiek mieszkania w momencie kupna</li>
-<li><b>tradeTime</b> - Rok kupna. Potrzebna do podziału danych</li>
-</ul>
-
-Dla zbioru treningowego (rok 2015) wylosowano 2000 obserwacji, natomiast zbiór walidacyjny (rok 2016) oraz testowy (rok 2017) posiadają kolejno: 1000 oraz 500 obserwacji. Zmniejszenie obserwacji jest wynikiem ograniczeń wynikających z zastosowania Geograficznie Ważonego Lasu Losowego (GWRF). Uwzględnienie tak małej liczby obserwacji wynika z wysokich wymagań modelu GWRF, który zabiera duża ilość pamięci RAM. 
-
-Dodatkowo dodano dwie zmienne za pomocą funkcji <b>distHaversine</b> obliczającą odległość od dwóch punktów.
-
-<li><b>centre_dist</b> - Odległość od centrum Pekina</li>
-<li><b>sub_dist</b> - Odległość do najbliższej stacji metra. Dane geolokalizacyjne zostały ściągnięte za pomocą scrapera wyszukującego ze <a href=https://en.wikipedia.org/wiki/List_of_Beijing_Subway_stations>strony wikipedii</a> posiadającej listę oraz odwołania do stacji pekińskich, a następnie pobierającego koordynaty z podstrony każdej stacji. Dane podzielone są na 3 lata, by stacje powstałe po okresie podzielonego zbioru danych w konkretnym roku nie zostały w nim uwzględnione.
-</li>
-
-
-
-</p>
-
 
 ```{r}
 #wczytanie csv
@@ -265,13 +179,6 @@ grid.arrange(df_map, train_map,valid_map,test_map, nrow = 1)
 ```
 
 
-    
-![png](output_7_0.png)
-    
-
-
-<h1>Analiza zbioru danych</h1>
-
 
 ```{r}
 hist_price = ggplot(df, aes(x = price)) +
@@ -286,12 +193,6 @@ grid.arrange(hist_price, map_price, nrow = 1, top = textGrob("Histogram oraz map
 ```
 
 
-    
-![png](output_9_0.png)
-    
-
-
-Najdroższe mieszkanie kosztuje 150 tysiecy juanów. Można zauważyć, iż mieszkania tanieją w zależności oddalenia od centrum. Największa ilość tanich mieszkań znajduje się na wschodzie Pekinu.
 
 
 ```{r}
@@ -311,12 +212,6 @@ grid.arrange(kitchen, living,drawing,bath, nrow = 2, widths = c(30, 30))
 ```
 
 
-    
-![png](output_11_0.png)
-    
-
-
-W zbiorze przeważają mieszkania z jedną kuchnią, dwoma pokojmami, jedną łazienką oraz salonem. Są mieszkania bez łazienek, kuchni i salonu.
 
 
 ```{r}
@@ -345,28 +240,12 @@ age = ggplot(df, aes(x = year)) +
 grid.arrange(structure, type,renovation,elev,age,nrow = 2)
 ```
 
-
-    
-![png](output_13_0.png)
-    
-
-
-Największy odsetek mieszkań znajduje się w budynkach wykonanych z kompozytu stalowo betonowego wraz z budynkami wykonanymi z płyty. Większość z nich została sklasyfikowana jako budynki o stanie renowacji twardym lub prostym. Przeważnie w budynkach znajduje się winda, aczkolwiek prawie 1500 ofert mieszkań nie posiada jej w swoich budynkach. Oferowane mieszkania zostały wybudowane w przedziale 0-60 lat.
-
-
 ```{r}
 ggmap(map_pekin) +
 geom_point(data=df, aes(x=Lng, y=Lat, color=year), alpha=0.9, size=3) + 
 scale_colour_gradientn(colours = terrain.colors(n = 7)) 
 ```
 
-
-    
-![png](output_15_0.png)
-    
-
-
-Nowsze mieszkania budowane są zarówno w okolicach centrum jak i w dalszych dzielnicach. Natomiast nowsze mieszkania znajdują się w dalszych dzielnicach.
 
 
 ```{r}
@@ -375,72 +254,10 @@ ggcorr(df,method = c("complete", "spearman"))
 ```
 
 
-    
-![png](output_17_0.png)
-    
-
-
-Silnie dodatnio skorelowane są ze sobą zmienne opisujące windę oraz strukturę budynku. Posiadanie windy jest skorelowane również z piętrem na którym znajduje się mieszkanie. LivingRoom, drawingRoom oraz bathroom są mocno skorelowane z powierzchnią mieszkania. Ujemnie natomiast skorelowany jest typ budynku wraz z piętrem mieszkania. Zmienne nie posiadają silnej korelacji ze zmienna niezależną.
-
 
 ```{r}
 summary(df)
 ```
-
-
-          Lng             Lat          tradeTime        square      
-     Min.   :116.1   Min.   :39.63   Min.   :2015   Min.   : 12.30  
-     1st Qu.:116.3   1st Qu.:39.89   1st Qu.:2015   1st Qu.: 57.89  
-     Median :116.4   Median :39.93   Median :2015   Median : 73.48  
-     Mean   :116.4   Mean   :39.95   Mean   :2016   Mean   : 82.40  
-     3rd Qu.:116.5   3rd Qu.:39.99   3rd Qu.:2016   3rd Qu.: 98.20  
-     Max.   :116.7   Max.   :40.24   Max.   :2017   Max.   :399.71  
-       livingRoom     drawingRoom       kitchen          bathRoom    
-     Min.   :1.000   Min.   :0.000   Min.   :0.0000   Min.   :0.000  
-     1st Qu.:1.000   1st Qu.:1.000   1st Qu.:1.0000   1st Qu.:1.000  
-     Median :2.000   Median :1.000   Median :1.0000   Median :1.000  
-     Mean   :2.013   Mean   :1.148   Mean   :0.9983   Mean   :1.185  
-     3rd Qu.:2.000   3rd Qu.:1.000   3rd Qu.:1.0000   3rd Qu.:1.000  
-     Max.   :7.000   Max.   :4.000   Max.   :2.0000   Max.   :7.000  
-         floor        buildingType        year      renovationCondition
-     Min.   : 1.00   Min.   :1.000   Min.   : 1.0   Min.   :1.000      
-     1st Qu.: 6.00   1st Qu.:1.000   1st Qu.:10.0   1st Qu.:3.000      
-     Median :11.00   Median :4.000   Median :14.0   Median :4.000      
-     Mean   :13.29   Mean   :3.002   Mean   :16.3   Mean   :3.212      
-     3rd Qu.:19.00   3rd Qu.:4.000   3rd Qu.:22.0   3rd Qu.:4.000      
-     Max.   :34.00   Max.   :4.000   Max.   :61.0   Max.   :4.000      
-     buildingStructure  ladderRatio        elevator          price       
-     Min.   :2.000     Min.   :0.0140   Min.   :0.0000   Min.   :  3096  
-     1st Qu.:2.000     1st Qu.:0.2500   1st Qu.:0.0000   1st Qu.: 30744  
-     Median :6.000     Median :0.3330   Median :1.0000   Median : 42084  
-     Mean   :4.481     Mean   :0.3751   Mean   :0.5914   Mean   : 46269  
-     3rd Qu.:6.000     3rd Qu.:0.5000   3rd Qu.:1.0000   3rd Qu.: 57086  
-     Max.   :6.000     Max.   :2.0000   Max.   :1.0000   Max.   :150000  
-        sub_dist        centre_dist     
-     Min.   :0.01557   Min.   : 0.3922  
-     1st Qu.:0.48533   1st Qu.: 7.1857  
-     Median :0.76547   Median :11.0326  
-     Mean   :1.01530   Mean   :12.7312  
-     3rd Qu.:1.14558   3rd Qu.:17.8270  
-     Max.   :9.77160   Max.   :40.8121  
-
-
-Najdalsze mieszkanie od punktu centrum jest oddalone o niecałe 41 km, natomiast najbliższe znajduje się ok 400 metrów od centrum Pekinu. Mieszkanie najbardziej oddalone od metra ma 9,77km odległości. 
-
-<h1>Random Forest</h1>
-
-Random Forest to model zbudowany złożonego drzewa decyzyjnego. Drzewo decyzyjne składa się z wielu drzew, które tworzą model. Każde drzewo w modelu jest tworzone na podstawie losowo wybranych cech, a wynikiem jest decyzja - klasyfikacja lub regresja. Model wykorzystuje wiele drzew i wybiera, najlepiej pasujący do wszystkich drzew w modelu. Uproszczony wzór regresyjny można zapisać:
-
-<i>Y<sub>i</sub> = ax<sub>i</sub> + e, i=1:n</i>
-
-Gdzie:<br>
-<i>Y<sub>i</sub></i> - Wartość zmiennej zależnej dla i-tej obserwacji<br>
-<i>ax<sub>i</sub></i> - Nieliniowa predykcja modelu lasu losowego opartego na zbiorze zmiennych niezależnych <i>i</i><br>
-<i>e</i> - błąd predykcji
-
-Powyższe równanie pomija rozkład przestrzenny
-<br><br>
-Do dokonania predykcji za pomocą lasów losowych użyto bibliotekę H2O. Narzędzie to umożliwia ułatwione tworzenie modeli uczenia maszynowego przy użyciu zaimplementowanych w niej algorytmów, w tym Lasów Losowych.
 
 
 ```{r}
@@ -498,22 +315,6 @@ drf_get_grid@summary_table[1,]
 ```
 
 
-<table class="dataframe">
-<caption>A H2OTable: 1 × 5</caption>
-<thead>
-	<tr><th></th><th scope=col>max_depth</th><th scope=col>ntrees</th><th scope=col>sample_rate</th><th scope=col>model_ids</th><th scope=col>rmse</th></tr>
-	<tr><th></th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;dbl&gt;</th></tr>
-</thead>
-<tbody>
-	<tr><th scope=row>1</th><td>40</td><td>430</td><td>0.8</td><td>drf_grid_IDx_model_1</td><td>8998.906</td></tr>
-</tbody>
-</table>
-
-
-
-Spośród 20 modeli, najlepszym modelem jest las losowy posiadający 430 drzew z maksymalną głębokością wynoszącą 40 wraz z sample rate równym 0.8
-
-
 ```{r}
 #Statystyki modelu
 best_drf <- h2o.getModel(drf_get_grid@model_ids[[1]]) 
@@ -522,101 +323,10 @@ best_drf
 ```
 
 
-    Model Details:
-    ==============
-    
-    H2ORegressionModel: drf
-    Model ID:  drf_grid_IDx_model_1 
-    Model Summary: 
-      number_of_trees number_of_internal_trees model_size_in_bytes min_depth
-    1             430                      430             8366410        21
-      max_depth mean_depth min_leaves max_leaves mean_leaves
-    1        31   25.85116       1499       1587  1544.91160
-    
-    
-    H2ORegressionMetrics: drf
-    ** Reported on training data. **
-    ** Metrics reported on Out-Of-Bag training samples **
-    
-    MSE:  77118264
-    RMSE:  8781.7
-    MAE:  6032.94
-    RMSLE:  0.2056017
-    Mean Residual Deviance :  77118264
-    
-    
-    H2ORegressionMetrics: drf
-    ** Reported on validation data. **
-    
-    MSE:  403901544
-    RMSE:  20097.3
-    MAE:  14818.78
-    RMSLE:  0.3843689
-    Mean Residual Deviance :  403901544
-    
-    
-    H2ORegressionMetrics: drf
-    ** Reported on cross-validation data. **
-    ** 5-fold cross-validation on training data (Metrics computed for combined holdout predictions) **
-    
-    MSE:  80980306
-    RMSE:  8998.906
-    MAE:  6241.497
-    RMSLE:  0.2108124
-    Mean Residual Deviance :  80980306
-    
-    
-    Cross-Validation Metrics Summary: 
-                                      mean             sd      cv_1_valid
-    mae                        6239.412600     298.685460     6520.242000
-    mean_residual_deviance 80940696.000000 6603342.000000 92297600.000000
-    mse                    80940696.000000 6603342.000000 92297600.000000
-    r2                            0.659967       0.015605        0.650926
-    residual_deviance      80940696.000000 6603342.000000 92297600.000000
-    rmse                       8990.958000     359.451630     9607.164000
-    rmsle                         0.210538       0.011014        0.218064
-                                cv_2_valid      cv_3_valid      cv_4_valid
-    mae                        6225.964400     6331.151400     6379.936000
-    mean_residual_deviance 80599592.000000 78888488.000000 77143080.000000
-    mse                    80599592.000000 78888488.000000 77143080.000000
-    r2                            0.651341        0.645220        0.682306
-    residual_deviance      80599592.000000 78888488.000000 77143080.000000
-    rmse                       8977.728000     8881.919000     8783.113000
-    rmsle                         0.221419        0.210152        0.210120
-                                cv_5_valid
-    mae                        5739.769500
-    mean_residual_deviance 75774704.000000
-    mse                    75774704.000000
-    r2                            0.670040
-    residual_deviance      75774704.000000
-    rmse                       8704.867000
-    rmsle                         0.192936
-
-
-
 ```{r}
 cv.drf<-best_drf@model$cross_validation_metrics_summary%>%.[,c(1,2)]
 cv.drf
 ```
-
-
-<table class="dataframe">
-<caption>A H2OTable: 7 × 2</caption>
-<thead>
-	<tr><th></th><th scope=col>mean</th><th scope=col>sd</th></tr>
-	<tr><th></th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;dbl&gt;</th></tr>
-</thead>
-<tbody>
-	<tr><th scope=row>mae</th><td>6.239413e+03</td><td>2.986855e+02</td></tr>
-	<tr><th scope=row>mean_residual_deviance</th><td>8.094070e+07</td><td>6.603342e+06</td></tr>
-	<tr><th scope=row>mse</th><td>8.094070e+07</td><td>6.603342e+06</td></tr>
-	<tr><th scope=row>r2</th><td>6.599667e-01</td><td>1.560545e-02</td></tr>
-	<tr><th scope=row>residual_deviance</th><td>8.094070e+07</td><td>6.603342e+06</td></tr>
-	<tr><th scope=row>rmse</th><td>8.990958e+03</td><td>3.594516e+02</td></tr>
-	<tr><th scope=row>rmsle</th><td>2.105381e-01</td><td>1.101364e-02</td></tr>
-</tbody>
-</table>
-
 
 
 
@@ -643,17 +353,8 @@ cat('RF Test RMSE:', round(sqrt(mean((XY_2017$RF_2017-XY_2017$obs_2017)^2 , na.r
 cat('RF Test MAE:', round(mean(abs(XY_2017$RF_2017-XY_2017$obs_2017) , na.rm = TRUE ), digits=3), '\n')
 cat('RF Test R2:', round(summary(lm(obs_2017~RF_2017,XY_2017))$r.squared, digits=3), '\n')
 
-```
-
-    RF Val RMSE: 20097.3 
-    RF Val MAE: 14818.78 
-    RF Val R2: 0.544 
-    RF Test RMSE: 33074.7 
-    RF Test MAE: 28824.22 
-    RF Test R2: 0.635 
+``` 
     
-
-
 ```{r}
 
 #Wykres dopasowania
@@ -693,19 +394,7 @@ grid.arrange(p.valid,p.test,
 
 ```
 
-    [1m[22m`geom_smooth()` using formula = 'y ~ x'
-    [1m[22m`geom_smooth()` using formula = 'y ~ x'
-    
-
-
-    
-![png](output_30_1.png)
-    
-
-
-Dane walidacyjne posiadają mniejszy błąd średniokwadratowy, natomiast ich R2 jest mniejsze niż zbioru testowego.
-
-
+  
 ```{r}
 pred = ggmap(map_pekin) +
     geom_point(data=XY_2016, aes(x=Lng, y=Lat, color=RF_2016), alpha=0.9, size=3) + 
@@ -721,11 +410,6 @@ grid.arrange(pred, obs, nrow = 1,
             widths = c(70, 70),
             top = textGrob("Random Forest predykcja cen mieszkań 2016 \n (Dane validacyjne) ", gp=gpar(fontsize=18)))
 ```
-
-
-    
-![png](output_32_0.png)
-    
 
 
 
@@ -746,14 +430,6 @@ grid.arrange(pred, obs, nrow = 1,
             widths = c(70, 70),
             top = textGrob("Random Forest predykcja cen mieszkań 2017 \n (Dane testowe) ", gp=gpar(fontsize=18)))
 ```
-
-
-    
-![png](output_33_0.png)
-    
-
-
-Na podstawie map, zauważalne jest niedoszacowanie cen mieszkań w Pekinie dla zbioru walidacyjnego oraz testowego. 
 
 
 ```{r}
@@ -815,33 +491,6 @@ ggplot(per.var.imp, aes(y=Rank, x=reorder(Variable, +Rank))) +
 ```
 
 
-    
-![png](output_36_0.png)
-    
-
-
-Model Random Forest, wskazuje że najważniejszym czynnikiem ceny mieszkania jest jego odległość od centrum, a kolejno rok budowy i odległość od metra.
-
-<h1>Random Forest ze współczynnikami GWR (RF&GWR)</h1>
-
-
-<h2>Geographically Weighted Regression</h2>
-
-Model GWR (Geographically Weighted Regression) jest modelem regresji lokalnej, który jest używany do modelowania zmiennych zależnych od zmiennych przestrzennych. Model ten jest lokalnie regresją liniową, która generuje lokalne oszacowania parametrów modelu dla każdego punktu lub regionu, w którym zbierane są dane. Model GWR można zapisać w następujący sposób:
-
-
-<p>Y<sub>i</sub> = &beta;<sub>0</sub>(u<sub>i</sub>, v<sub>i</sub>) + &beta;<sub>1</sub>(u<sub>i</sub>, v<sub>i</sub>)x<sub>1</sub> + &beta;<sub>2</sub>(u<sub>i</sub>, v<sub>i</sub>)x<sub>2</sub> ... &beta;<sub>n</sub>(u<sub>i</sub>, v<sub>i</sub>)x<sub>n</sub> + e; i=1:n</p>
-
-Gdzie 
-<br>
-Y<sub>i</sub> - wartość zmiennej niezależnej <br>
-(u<sub>i</sub>, v<sub>i</sub>) - określa punkt o współrzędnych (długość i szerokość geograficzna) 
-<br>
-x<sub>i</sub> - jest wartością stałej zmiennej, która jest znana i nie zawiera błędów dla i-tej obserwacji.
-
-
-
-
 ```{r}
 #przygotowanie danych i SDF
 xy <- df[,c(1:2)]
@@ -888,15 +537,6 @@ cat('Tricube: bw:', gwr.bw_tricube,'AIC:',77347.98  ,'\n' )
 cat('Boxcar: bw:', gwr.bw_boxcar,'AIC:',77520.67  ,'\n' )
 ```
 
-    Gaussian: bw: 75 AIC: 77320.78 
-    Exponential: bw: 64 AIC: 77305.41 
-    Tricube: bw: 721 AIC: 77347.98 
-    Boxcar: bw: 689 AIC: 77520.67 
-    
-
-Najmniejsza wartość AIC została uzyskana dla jądra exponential ze średnicą 64.
-
-
 ```{r}
 RESPONSE <- "price"
 PREDICTORS <- c("square", "livingRoom","drawingRoom","kitchen","bathRoom","floor","buildingType","year", "renovationCondition", "buildingStructure", "ladderRatio", "elevator" ,'centre_dist', 'sub_dist')
@@ -916,29 +556,12 @@ model.view.gwr(RESPONSE, PREDICTORS, model.list = model.list)
 
 ```
 
-
-    
-![png](output_45_0.png)
-    
-
-
-Powyższy rysunek przedstawia widok koła regresji, tworzony na podstawie metody krokowej. Zmienna objaśniana znajduje się na środku wykresu, natomiast węzły prezentują zmienne objaśniające.
-
-
 ```{r}
 plot(sorted.models[[2]][,2], col = "black", pch = 20, lty = 5,
     main = "Alternatywna metoda sprawdzania zmiennych",
     ylab = "AICc", xlab = "Model number", type = "b")
 
 ```
-
-
-    
-![png](output_47_0.png)
-    
-
-
-Rysunek przedstawia wartości AIC dla danego modelu. Identycznie jak wcześniejszy wykres, przedstawia wydajność modelu, względem dodania kolejnych zmiennych. Najmniejszą wartość kryterium osiągnął model uwzględniający wszystkie zmienne.
 
 
 ```{r}
@@ -951,124 +574,6 @@ gwr.res <- gwr.basic(price ~ square + livingRoom+drawingRoom+kitchen+bathRoom+fl
                      adaptive = TRUE)
 gwr.res
 ```
-
-
-       ***********************************************************************
-       *                       Package   GWmodel                             *
-       ***********************************************************************
-       Program starts at: 2023-01-22 20:35:22 
-       Call:
-       gwr.basic(formula = price ~ square + livingRoom + drawingRoom + 
-        kitchen + bathRoom + floor + buildingType + year + renovationCondition + 
-        buildingStructure + ladderRatio + elevator + centre_dist + 
-        sub_dist, data = SPDF, bw = gwr.bw_exponential, kernel = "exponential", 
-        adaptive = TRUE)
-    
-       Dependent (y) variable:  price
-       Independent variables:  square livingRoom drawingRoom kitchen bathRoom floor buildingType year renovationCondition buildingStructure ladderRatio elevator centre_dist sub_dist
-       Number of data points: 3500
-       ***********************************************************************
-       *                    Results of Global Regression                     *
-       ***********************************************************************
-    
-       Call:
-        lm(formula = formula, data = data)
-    
-       Residuals:
-       Min     1Q Median     3Q    Max 
-    -49975 -11995  -3724   8868  91563 
-    
-       Coefficients:
-                           Estimate Std. Error t value Pr(>|t|)    
-       (Intercept)         44007.48    3994.61  11.017  < 2e-16 ***
-       square                -90.19      17.35  -5.199 2.12e-07 ***
-       livingRoom           1142.78     599.93   1.905  0.05688 .  
-       drawingRoom          1700.38     731.92   2.323  0.02023 *  
-       kitchen              4079.67    3010.25   1.355  0.17542    
-       bathRoom             1926.01     997.98   1.930  0.05370 .  
-       floor                  10.60      71.51   0.148  0.88216    
-       buildingType         2009.78     376.91   5.332 1.03e-07 ***
-       year                  285.93      48.53   5.891 4.19e-09 ***
-       renovationCondition   879.73     290.26   3.031  0.00246 ** 
-       buildingStructure    -232.91     273.16  -0.853  0.39391    
-       ladderRatio          4784.12    2031.13   2.355  0.01856 *  
-       elevator             7076.69    1255.61   5.636 1.88e-08 ***
-       centre_dist         -1478.56      50.96 -29.015  < 2e-16 ***
-       sub_dist             -677.82     344.50  -1.968  0.04920 *  
-    
-       ---Significance stars
-       Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1 
-       Residual standard error: 17260 on 3485 degrees of freedom
-       Multiple R-squared: 0.3395
-       Adjusted R-squared: 0.3369 
-       F-statistic:   128 on 14 and 3485 DF,  p-value: < 2.2e-16 
-       ***Extra Diagnostic information
-       Residual sum of squares: 1.038538e+12
-       Sigma(hat): 17230.64
-       AIC:  78243.68
-       AICc:  78243.84
-       BIC:  74972.82
-       ***********************************************************************
-       *          Results of Geographically Weighted Regression              *
-       ***********************************************************************
-    
-       *********************Model calibration information*********************
-       Kernel function: exponential 
-       Adaptive bandwidth: 64 (number of nearest neighbours)
-       Regression points: the same locations as observations are used.
-       Distance metric: Euclidean distance metric is used.
-    
-       ****************Summary of GWR coefficient estimates:******************
-                                  Min.     1st Qu.      Median     3rd Qu.
-       Intercept            15736.7218  45234.3188  53398.5406  64381.2411
-       square                -238.5556   -125.4848    -71.5563    -34.3022
-       livingRoom           -6623.2567   -723.6461    712.3307   1573.7925
-       drawingRoom          -5525.6211     14.6721   1941.0901   3473.2795
-       kitchen             -24083.9961  -4566.7313    385.7169   8203.1091
-       bathRoom             -6869.9705   1265.0018   2311.5644   3721.7268
-       floor                 -888.6403   -161.2106     30.3240    196.8712
-       buildingType         -1994.3726   1321.1040   1971.8599   2666.9481
-       year                  -686.7342      6.2326    215.7208    348.6368
-       renovationCondition   -419.5599    727.8824   1142.1921   1619.3504
-       buildingStructure    -5511.0583   -651.9938    -17.6700    503.0703
-       ladderRatio         -12527.4798    747.5895   5872.1705   9943.8161
-       elevator             -4588.6090   2673.3885   5516.0229   8149.4949
-       centre_dist          -6986.6661  -3295.3657  -2467.5351  -1873.6111
-       sub_dist             -9677.9722  -1860.2836   -333.8201    949.7463
-                                 Max.
-       Intercept           101349.121
-       square                  85.038
-       livingRoom            4607.040
-       drawingRoom          12043.428
-       kitchen              20968.917
-       bathRoom             22775.757
-       floor                  907.773
-       buildingType          5921.009
-       year                   934.625
-       renovationCondition   6079.480
-       buildingStructure     3283.357
-       ladderRatio          24286.923
-       elevator             19618.210
-       centre_dist           -393.596
-       sub_dist             10257.604
-       ************************Diagnostic information*************************
-       Number of data points: 3500 
-       Effective number of parameters (2trace(S) - trace(S'S)): 581.0525 
-       Effective degrees of freedom (n-2trace(S) + trace(S'S)): 2918.947 
-       AICc (GWR book, Fotheringham, et al. 2002, p. 61, eq 2.33): 77305.41 
-       AIC (GWR book, Fotheringham, et al. 2002,GWR p. 96, eq. 4.22): 76831.72 
-       BIC (GWR book, Fotheringham, et al. 2002,GWR p. 61, eq. 2.34): 76044.88 
-       Residual sum of squares: 628311655516 
-       R-square value:  0.6004259 
-       Adjusted R-square value:  0.5208585 
-    
-       ***********************************************************************
-       Program stops at: 2023-01-22 20:35:26 
-
-
-Wszystkie zmienne oprócz kitchen, buildingStructure  oraz floor są istotne na poziomie 10%
-
-
 
 ```{r}
 #Zapisanie wspolczynnikow zamiast zmiennych
@@ -1131,17 +636,6 @@ grid.arrange(elevator_slope, year_slope,livingRoom_slope, drawingRoom_slope,kitc
             buildingType_slope,ladderRatio_slope, centre_dist_slope, sub_dist_slope,Local_R2,ncol=3,
             top = textGrob("Wykresy współczynników dla zmiennych "))
 ```
-
-
-    
-![png](output_53_0.png)
-    
-
-
-<h2>Random Forest i współczynniki GWR</h2>
-
-Sprawdzono czy model Random Forest ulegnie poprawie po wprowadzeniu do niego współczynników z modelu GWR jako zmiennych. Zastosowano identyczne kroki jak przy modelowaniu lasu losowego ze zwykłymi danymi.
-
 
 ```{r}
 #Utworzenie tabel z danymi GWR
@@ -1207,22 +701,6 @@ drf_get_grid@summary_table[1,]
 ```
 
 
-<table class="dataframe">
-<caption>A H2OTable: 1 × 5</caption>
-<thead>
-	<tr><th></th><th scope=col>max_depth</th><th scope=col>ntrees</th><th scope=col>sample_rate</th><th scope=col>model_ids</th><th scope=col>rmse</th></tr>
-	<tr><th></th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;chr&gt;</th><th scope=col>&lt;dbl&gt;</th></tr>
-</thead>
-<tbody>
-	<tr><th scope=row>1</th><td>40</td><td>450</td><td>0.7</td><td>drf_grid_IDx_model_1</td><td>7076.216</td></tr>
-</tbody>
-</table>
-
-
-
-Dla modelu RF&GWR zauważalny jest mocny spadek wartości RMSE dla zbioru treningowego. Najlepszy model posiada maksymalną głębokośc na poziomie 40, 450 drzew oraz sample rate równy 0.7.
-
-
 ```{r}
 #Statystyki
 best_drf <- h2o.getModel(drf_get_grid@model_ids[[1]]) 
@@ -1230,76 +708,7 @@ best_drf
 
 ```
 
-
-    Model Details:
-    ==============
-    
-    H2ORegressionModel: drf
-    Model ID:  drf_grid_IDx_model_1 
-    Model Summary: 
-      number_of_trees number_of_internal_trees model_size_in_bytes min_depth
-    1             450                      450             5069587        20
-      max_depth mean_depth min_leaves max_leaves mean_leaves
-    1        35   25.17111        863        924   892.87780
-    
-    
-    H2ORegressionMetrics: drf
-    ** Reported on training data. **
-    ** Metrics reported on Out-Of-Bag training samples **
-    
-    MSE:  47139229
-    RMSE:  6865.801
-    MAE:  4534.817
-    RMSLE:  0.165597
-    Mean Residual Deviance :  47139229
-    
-    
-    H2ORegressionMetrics: drf
-    ** Reported on validation data. **
-    
-    MSE:  342007980
-    RMSE:  18493.46
-    MAE:  14576.17
-    RMSLE:  0.378934
-    Mean Residual Deviance :  342007980
-    
-    
-    H2ORegressionMetrics: drf
-    ** Reported on cross-validation data. **
-    ** 5-fold cross-validation on training data (Metrics computed for combined holdout predictions) **
-    
-    MSE:  50072834
-    RMSE:  7076.216
-    MAE:  4739.644
-    RMSLE:  0.1721543
-    Mean Residual Deviance :  50072834
-    
-    
-    Cross-Validation Metrics Summary: 
-                                      mean             sd      cv_1_valid
-    mae                        4737.061000     345.839480     5143.776400
-    mean_residual_deviance 50027424.000000 8613290.000000 59505532.000000
-    mse                    50027424.000000 8613290.000000 59505532.000000
-    r2                            0.789769       0.033917        0.774947
-    residual_deviance      50027424.000000 8613290.000000 59505532.000000
-    rmse                       7051.612300     614.604800     7713.983000
-    rmsle                         0.171588       0.014877        0.181355
-                                cv_2_valid      cv_3_valid      cv_4_valid
-    mae                        4811.512000     4947.319300     4501.385300
-    mean_residual_deviance 56546064.000000 51943988.000000 41465304.000000
-    mse                    56546064.000000 51943988.000000 41465304.000000
-    r2                            0.755392        0.766396        0.829236
-    residual_deviance      56546064.000000 51943988.000000 41465304.000000
-    rmse                       7519.712000     7207.218000     6439.356000
-    rmsle                         0.189266        0.172762        0.163048
-                                cv_5_valid
-    mae                        4281.311000
-    mean_residual_deviance 40676232.000000
-    mse                    40676232.000000
-    r2                            0.822876
-    residual_deviance      40676232.000000
-    rmse                       6377.792000
-    rmsle                         0.151510
+0.151510
 
 
 
@@ -1307,25 +716,6 @@ best_drf
 cv.drf<-best_drf@model$cross_validation_metrics_summary%>%.[,c(1,2)]
 cv.drf
 ```
-
-
-<table class="dataframe">
-<caption>A H2OTable: 7 × 2</caption>
-<thead>
-	<tr><th></th><th scope=col>mean</th><th scope=col>sd</th></tr>
-	<tr><th></th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;dbl&gt;</th></tr>
-</thead>
-<tbody>
-	<tr><th scope=row>mae</th><td>4.737061e+03</td><td>3.458395e+02</td></tr>
-	<tr><th scope=row>mean_residual_deviance</th><td>5.002742e+07</td><td>8.613290e+06</td></tr>
-	<tr><th scope=row>mse</th><td>5.002742e+07</td><td>8.613290e+06</td></tr>
-	<tr><th scope=row>r2</th><td>7.897694e-01</td><td>3.391701e-02</td></tr>
-	<tr><th scope=row>residual_deviance</th><td>5.002742e+07</td><td>8.613290e+06</td></tr>
-	<tr><th scope=row>rmse</th><td>7.051612e+03</td><td>6.146048e+02</td></tr>
-	<tr><th scope=row>rmsle</th><td>1.715883e-01</td><td>1.487732e-02</td></tr>
-</tbody>
-</table>
-
 
 
 
@@ -1398,19 +788,7 @@ grid.arrange(p.valid,p.test,
             heights = c(30,6), 
             top = textGrob("Random Forest & GWR predykcja cen mieszkań ",gp=gpar(fontsize=18)))
 
-```
-
-    [1m[22m`geom_smooth()` using formula = 'y ~ x'
-    [1m[22m`geom_smooth()` using formula = 'y ~ x'
-    
-
-
-    
-![png](output_65_1.png)
-    
-
-
-Również wyestymowane wartości są lepiej dopasowane do prawdziwych wartości.
+```    
 
 
 ```{r}
@@ -1430,12 +808,6 @@ grid.arrange(pred, obs, nrow = 1,
 ```
 
 
-    
-![png](output_67_0.png)
-    
-
-
-
 ```{r}
 pred = ggmap(map_pekin) +
     geom_point(data=XY_2017_gwr, aes(x=Lng, y=Lat, color=RF_2017), alpha=0.9, size=3) + 
@@ -1451,14 +823,6 @@ grid.arrange(pred, obs, nrow = 1,
             widths = c(70, 70),
             top = textGrob("Random Forest & GWR predykcja cen mieszkań 2017 \n (Dane testowe) ", gp=gpar(fontsize=18)))
 ```
-
-
-    
-![png](output_68_0.png)
-    
-
-
-Na mapach zauważalna jest poprawa wycen mieszkań, pomimo że w dalszym stopniu ceny są niedoszacowane.
 
 
 ```{r}
@@ -1506,29 +870,6 @@ ggplot(per.var.imp, aes(y=Rank, x=reorder(Variable, +Rank))) +
 ```
 
 
-    
-![png](output_72_0.png)
-    
-
-
-Dla modelu RF&GWR feature importance uległ znacznej zmianie. Najważniejszym czynnikiem w tym wypadku jest struktura budynku oraz odległość od centrum. Również ilość salonów jest istotnym czynnikiem. Odległość od metra oraz rok budowy znacząco spadły w porównaniu do modelu Random Forest.
-
-<h1>Geographical Weighted Random Forest</h1>
-
-Geograficznie ważony Random Forest jest metodą analizy przestrzennej, która wykorzystuje las losowy na na płaszczyźnie lokalnej. Dla każdej lokalizacji tworzony jest lokalny las losowy, który uwzględnia jedynie <b><i>n</i></b> najbliższych obserwacji, co pozwala na obliczenie lasu losowego w każdym punkcie z przypisaną do niego mocą predykcyjną oraz wydajnością. Bada istnienie stacjonarności przestrzennej między zbiorem zmiennych niezależnych, a zmienną zależną za pomocą dopasowania podmodelu dla każdej obserwacji przy uwzględnieniu sąsiedujących obserwacji. Jest metodą koncepcyjnie bazującą na regresji ważnonej geograficznie (GWR), lecz główną różnicą poniędzy modelem GWR a GWRF jest modelowanie niestacjonarności, włączając elastyczny model nieliniowy, który ze względu na charakter ładowania początkowego jest cięzki do przeuczenia. Uproszczony wzór wygląda następująco:
-
-<i>Y<sub>i</sub> = a(u<sub>i</sub>, v<sub>i</sub>)x + e, i=1:n</i>
-
-Gdzie:<br>
-<i>Y<sub>i</sub></i> - Wartość zmiennej zależnej dla i-tej obserwacji<br>
-<i>u<sub>i</sub>, v<sub>i</sub></I> - lokalizacja geograficzna X,Y <br>
-<i>a(u<sub>i</sub>, v<sub>i</sub>)x</i> - Predykcja modelu lasu losowego <i>(ax) </i>skalibrowanego w lokalizacji <i>i</i><br>
-<i>e</i> - błąd predykcji
-
-Do modelowania Geograficznie Ważonego Lasu Losowego posłużono się pakietem "SpatialML".
-
-
-
 
 
 ```{r}
@@ -1554,131 +895,6 @@ grf.model <- grf(price ~ square + livingRoom+drawingRoom+kitchen+bathRoom+floor+
                  forests = TRUE,
                  coords=Coords)
 ```
-
-    
-    Number of Observations: 2000
-    
-    Number of Independent Variables: 14
-    
-    Kernel: Fixed
-    Bandwidth: 200
-    
-    
-    --------------- Global Model Summary ---------------
-    
-    
-    
-
-    Ranger result
-    
-    Call:
-     ranger(price ~ square + livingRoom + drawingRoom + kitchen +      bathRoom + floor + buildingType + year + renovationCondition +      buildingStructure + ladderRatio + elevator + centre_dist +      sub_dist, data = train.df, num.trees = 440, mtry = 2, importance = "impurity",      num.threads = NULL) 
-    
-    Type:                             Regression 
-    Number of trees:                  440 
-    Sample size:                      2000 
-    Number of independent variables:  14 
-    Mtry:                             2 
-    Target node size:                 5 
-    Variable importance mode:         impurity 
-    Splitrule:                        variance 
-    OOB prediction error (MSE):       95095744 
-    R squared (OOB):                  0.6012681 
-    
-
-    
-    Importance:
-    
-    
-    
-
-                 square          livingRoom         drawingRoom             kitchen 
-            37051528735          8124174613          5460782456          2839732165 
-               bathRoom               floor        buildingType                year 
-             5725851860         21601064778          7471388470         40383661171 
-    renovationCondition   buildingStructure         ladderRatio            elevator 
-             7176049342         10055560181         21253648895          4321857296 
-            centre_dist            sub_dist 
-           164528859264         49775948500 
-    
-
-    
-    Mean Square Error (Not OBB): 38799442.223
-    
-    R-squared (Not OBB) %: 83.723
-    
-    AIC (Not OBB): 34977.833
-    
-    AICc (Not OBB): 34978.075
-    
-    
-    --------------- Local Model Summary ---------------
-    
-    
-    
-    Residuals OOB:
-    
-    
-    
-
-        Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-    -42402.0  -5782.9  -1750.2      4.3   3840.5  73167.2 
-    
-
-    
-    Residuals Predicted (Not OBB):
-    
-    
-    
-
-         Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-    -28496.64  -3801.24  -1081.04      8.83   2627.54  43886.17 
-    
-
-    
-    Local Variable Importance:
-    
-    
-    
-
-                                 Min          Max         Mean        StD
-    square               33484280823  38481977796  36043798236  754954122
-    livingRoom            7248987357   8285792149   7774154370  151007108
-    drawingRoom           4877559139   5731998881   5294386296  125184726
-    kitchen               2256139314   3803173528   3012251830  198924249
-    bathRoom              4910848166   6480858364   5608502384  218519640
-    floor                20478591086  23075725288  21705343320  371650036
-    buildingType          6767689629   7915787429   7369806799  170534176
-    year                 37503303938  43854043891  40532172412 1008611375
-    renovationCondition   6976665601   7902111162   7410082576  130546587
-    buildingStructure     9438293126  11401748695  10377046444  283841709
-    ladderRatio          19203821112  22162470372  20712877804  420480830
-    elevator              3713228339   5128850380   4309937069  178763590
-    centre_dist         154463280355 175517763292 165109779982 2815468175
-    sub_dist             45716442074  53113537756  49228101723 1142596637
-    
-
-    
-    Mean squared error (OOB): 92677601.057
-    
-    R-squared (OOB) %: 61.121
-    
-    AIC (OBB): 36719.275
-    
-    AICc (OBB): 36719.517
-    
-    Mean squared error Predicted (Not OBB): 38748604.56
-    
-    R-squared Predicted (Not OBB) %: 83.745
-    
-    AIC Predicted (Not OBB): 34975.211
-    
-    AICc Predicted (Not OBB): 34975.453
-    
-    
-    Calculation time (in seconds): 2.7552
-    
-    
 
 
 ```{r}
@@ -1718,26 +934,11 @@ ggplot(FI, aes(y=Rank, x=reorder(Etykiety, +Rank))) +
 ```
 
 
-    
-![png](output_77_0.png)
-    
-
-
-Feature Importance jest podobny do wykresu ze zwykłego lasu losowego, lecz drugą najważniejszą zmienną w tym przypadku jest odległość do metra niż rok budowy.
-
-
 ```{r}
 cat('Global MSE:', grf.model$Global.Model$prediction.error, '\n')
 cat('Global RMSE:', sqrt(grf.model$Global.Model$prediction.error), '\n')
 cat('Global R2:', grf.model$Global.Model$r.squared, '\n')
 ```
-
-    Global MSE: 95095744 
-    Global RMSE: 9751.705 
-    Global R2: 0.6012681 
-    
-
-Wartości globalne błędów średniokwadratowych oraz R<sup>2</sup> dla zbioru treningowego posiadają najgorsze wartości w porównaniu z poprzednimi modelami.
 
 
 ```{r}
@@ -1746,54 +947,11 @@ grf.model$LocalModelSummary
 ```
 
 
-<dl>
-	<dt>$l.VariableImportance</dt>
-		<dd><table class="dataframe">
-<caption>A data.frame: 14 × 4</caption>
-<thead>
-	<tr><th></th><th scope=col>Min</th><th scope=col>Max</th><th scope=col>Mean</th><th scope=col>StD</th></tr>
-	<tr><th></th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;dbl&gt;</th><th scope=col>&lt;dbl&gt;</th></tr>
-</thead>
-<tbody>
-	<tr><th scope=row>square</th><td> 33484280823</td><td> 38481977796</td><td> 36043798236</td><td> 754954122</td></tr>
-	<tr><th scope=row>livingRoom</th><td>  7248987357</td><td>  8285792149</td><td>  7774154370</td><td> 151007108</td></tr>
-	<tr><th scope=row>drawingRoom</th><td>  4877559139</td><td>  5731998881</td><td>  5294386296</td><td> 125184726</td></tr>
-	<tr><th scope=row>kitchen</th><td>  2256139314</td><td>  3803173528</td><td>  3012251830</td><td> 198924249</td></tr>
-	<tr><th scope=row>bathRoom</th><td>  4910848166</td><td>  6480858364</td><td>  5608502384</td><td> 218519640</td></tr>
-	<tr><th scope=row>floor</th><td> 20478591086</td><td> 23075725288</td><td> 21705343320</td><td> 371650036</td></tr>
-	<tr><th scope=row>buildingType</th><td>  6767689629</td><td>  7915787429</td><td>  7369806799</td><td> 170534176</td></tr>
-	<tr><th scope=row>year</th><td> 37503303938</td><td> 43854043891</td><td> 40532172412</td><td>1008611375</td></tr>
-	<tr><th scope=row>renovationCondition</th><td>  6976665601</td><td>  7902111162</td><td>  7410082576</td><td> 130546587</td></tr>
-	<tr><th scope=row>buildingStructure</th><td>  9438293126</td><td> 11401748695</td><td> 10377046444</td><td> 283841709</td></tr>
-	<tr><th scope=row>ladderRatio</th><td> 19203821112</td><td> 22162470372</td><td> 20712877804</td><td> 420480830</td></tr>
-	<tr><th scope=row>elevator</th><td>  3713228339</td><td>  5128850380</td><td>  4309937069</td><td> 178763590</td></tr>
-	<tr><th scope=row>centre_dist</th><td>154463280355</td><td>175517763292</td><td>165109779982</td><td>2815468175</td></tr>
-	<tr><th scope=row>sub_dist</th><td> 45716442074</td><td> 53113537756</td><td> 49228101723</td><td>1142596637</td></tr>
-</tbody>
-</table>
-</dd>
-	<dt>$l.MSE.OOB</dt>
-		<dd>92677601.0568197</dd>
-	<dt>$l.r.OOB</dt>
-		<dd>0.611212823728776</dd>
-	<dt>$l.MSE.Pred</dt>
-		<dd>38748604.5595695</dd>
-	<dt>$l.r.Pred</dt>
-		<dd>0.83744766395141</dd>
-</dl>
-
-
-
 
 ```{r}
 cat('Local RMSE:', sqrt(grf.model$LocalModelSummary$l.MSE.Pred), '\n')
 
 ```
-
-    Local RMSE: 6224.838 
-    
-
-Biorąc pod uwagę wartości błędów oraz R<sup>2</sup> na poziomie lokalnym osiągają najlepsze wyniki względem poprzednich modeli. 
 
 
 ```{r}
@@ -1813,17 +971,6 @@ cat('RF Test MAE:', round(mean(abs(XY_2017$GWRF_2017-XY_2017$obs_2017) , na.rm =
 cat('RF Test R2:', round(summary(lm(obs_2017~GWRF_2017,XY_2017))$r.squared, digits=3), '\n')
 
 ```
-
-    RF Validation RMSE: 20840.69 
-    RF Validation MAE: 14952.87 
-    RF Validation R2: 0.493 
-    RF Test RMSE: 33109.78 
-    RF Test MAE: 28181.35 
-    RF Test R2: 0.6 
-    
-
-RMSE na poziomie lokalnym wynosi jedynie 6213, jednak biorąc pod uwagę globalną wartość, wartość predykcyjną oraz R<sup>2</sup>, model ten wykazuje najgorsze wyniki niż dwa poprzednie modele. 
-
 
 ```{r}
 bathRoomIm = grf.model$Local.Variable.Importance['bathRoom']
@@ -1916,15 +1063,6 @@ grid.arrange(SQ, LRAT,RC, YR,BT,FL,KN,LR,DR,BS,bath,elev,CD,SD,
             top = textGrob("Local Feature Importance", gp=gpar(fontsize=18)))
 ```
 
-
-    
-![png](output_89_0.png)
-    
-
-
-Zauważalna jest zmniejszona liczba mieszkań w okolicach centrum, dla których ważność posiadania windy ma większa wartość.
-
-
 ```{r}
 GOF = grf.model$LGofFit['LM_Rsq100']
 
@@ -1935,16 +1073,6 @@ ggmap(map_pekin) +
   scale_colour_gradientn(colours = terrain.colors(n = 7)) 
 
 ```
-
-
-    
-![png](output_91_0.png)
-    
-
-
-R<sup>2</sup> dla większości obserwacji posiada większą wartość (od koloru żółtego). Istnieją natomiast pojedyńcze mieszkania w kolorze najsłabszego dopasowania (zielonego)
-
-<h3>Predykcja</h3>
 
 
 ```{r}
@@ -1984,19 +1112,6 @@ grid.arrange(p.valid,p.test,
 
 ```
 
-    [1m[22m`geom_smooth()` using formula = 'y ~ x'
-    [1m[22m`geom_smooth()` using formula = 'y ~ x'
-    
-
-
-    
-![png](output_94_1.png)
-    
-
-
-Dopasowanie predykcji do obserwacji pogorszyło się względem modelu Random Forest oraz Random Forest ze współczynnikami GWR.
-
-
 ```{r}
 pred = ggmap(map_pekin) +
     geom_point(data=XY_2016, aes(x=Lng, y=Lat, color=GWRF_2016), alpha=0.9, size=3) + 
@@ -2014,13 +1129,6 @@ grid.arrange(pred, obs, nrow = 1,
             top = textGrob("GWRF predykcja cen mieszkań 2016 \n (Dane validacyjne) ", gp=gpar(fontsize=18)))
 ```
 
-
-    
-![png](output_96_0.png)
-    
-
-
-
 ```{r}
 pred = ggmap(map_pekin) +
     geom_point(data=XY_2017, aes(x=Lng, y=Lat, color=GWRF_2017), alpha=0.9, size=3) + 
@@ -2037,31 +1145,3 @@ grid.arrange(pred, obs, nrow = 1,
             widths = c(70, 70),
             top = textGrob("GWRF predykcja cen mieszkań 2017 \n (Dane testowe) ", gp=gpar(fontsize=18)))
 ```
-
-
-    
-![png](output_97_0.png)
-    
-
-
-Również na mapie zauważalne jest, że dla modelu GWRF wartości dla zbioru walidacyjnego oraz testowego są bardziej niedoszacowane niż w poprzednich modelach.
-
-<h1>Wnioski</h1>
-
-W nieniejszej pracy wyestymowano modele Lasu Losowego, Lasu Losowego z uwzględnieniem współczynników z estymacji regresji ważnonej geograficznie oraz Geograficznie Ważony Las Losowy. Najlepszym modelem okazał się Las losowy ze współczynnikami GWR osiągając najmniejszy błąd średniokwadratowy oraz najlepsze dopasowanie R2. Drugim najlepszym modelem jest zwykły las losowy, jednak model GWRF statystykami nie odbiega od niego znacząco na poziomie globalnym, jednak lokalne wartości metryk przewyższają poprzednie modele. Potwierdza to teorię o istotnym wpływie czynników geograficznych przy modelowaniu danych przestrzennych. Problemem GWRF jest zbyt duże obciążenie pamięci RAM przy zasadniczo małej liczbie obserwacji (przy kernelu fixed) oraz zbyt długi czas modelowania (przy kernelu adaptive). Wyniki za pomocą tego modelu mogłyby być lepsze stosując adaptacyjny typ jądra. Dodatkowo modele mogłyby osiądać lepszą wartość predykcyjną stosując selekcję zmiennych wraz z uwzględnieniem większej liczby obserwacji.
-
-Wytrenowanie modelu lasu losowego na współczynnikach regresji ważnonej geograficznie potwierdza, że uwzględnienie czynników przestrzennych przy modelowaniu danych przestrzennych jest istotnym elementem. 
-
-<h1>Bibliografia</h1>
-
-
-<a href = 'https://www.tandfonline.com/doi/full/10.1080/10106049.2019.1595177' >Georganos, Stefanos, et al. "Geographical random forests: a spatial extension of the random forest algorithm to address spatial heterogeneity in remote sensing and population modelling." Geocarto International 36.2 (2021): 121-136. </a>
-
-<a href='https://cran.r-project.org/web/packages/SpatialML/SpatialML.pdf' >S.Kalogirou , S.Georganos . "SpatialML", dostęp 21.01.2023</a>
-
-<a href='https://www.scirp.org/html/5-1240252_41537.htm' >Hutabarat, Ida Mariati, et al. "Estimating the Parameters Geographically Weighted Regression (GWR) with Measurement Error." Open Journal of Statistics 2013 (2013).
-</a>
-
-<a href='https://zia207.github.io/geospatial-r-github.io/geographically-wighted-random-forest.html' >Geospatial Data Science in R, dostęp 21.01.2023</a>
-
-
